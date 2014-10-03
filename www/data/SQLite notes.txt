@@ -1,0 +1,6 @@
+
+SQLITE QUERY FIND DUPLICATES :
+select item_name, count(*) from items group by item_name having count(*)>1
+
+SQLITE QUERY TO REMOVE DUPLICATES:
+delete from items where item_ID not in (select min(item_ID) from items group by item_name);

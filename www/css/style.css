@@ -1,0 +1,66 @@
+@charset "UTF-8";
+/* CSS Document */
+
+/** * Eric Meyer's Reset CSS v2.0 (http://meyerweb.com/eric/tools/css/reset/) * http://cssreset.com */
+
+html, body, div, span, applet, object, iframe,h1, h2, h3, h4, h5, h6, p, blockquote, pre,a, abbr, acronym, address, big, cite, code,del, dfn, em, img, ins, kbd, q, s, samp,small, strike, strong, sub, sup, tt, var,b, u, i, center,dl, dt, dd, ol, ul, li,fieldset, form, label, legend,table, caption, tbody, tfoot, thead, tr, th, td,article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary,time, mark, audio, video {	margin: 0;	padding: 0;	border: 0;	font-size: 100%;	font: inherit;	vertical-align: baseline;}/* HTML5 display-role reset for older browsers*/
+
+article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {	display: block;}body {	line-height: 1;}ol, ul {	list-style: none;}blockquote, q {	quotes: none;}blockquote:before, blockquote:after,q:before, q:after {	content: '';	content: none;}table {	border-collapse: collapse;	border-spacing: 0;}
+
+/* start Superstore CSS from here on */
+
+.searchFieldDiv {
+    margin-top: .5em; 
+    width: 100%; 
+    overflow: hidden;
+}
+
+.item_thumb {
+	width: 5em;
+	height: auto;
+	float: left;
+	margin-bottom: .3em;
+	margin-right: .8em;
+}
+
+#searchBarDiv {
+	background-color: rgba(1,103,178,1);
+	margin: 0px -10px;
+	padding: 4px 5px 0px 6px;
+}
+
+.resultsItem {
+	text-transform: uppercase;	
+	font-size: 1.2em;
+	letter-spacing: .5px;
+}
+
+.itemPrice {
+	font-size: 1.1em;
+	color: rgb(238,45,36);	
+	float: right;
+	margin-right: 1em;
+}
+
+.itemBrand {
+	color: #595959;
+	font-weight: 500;
+	font-size: 1.2em;	
+	padding-bottom: 2px;
+}
+
+.nameItem {
+	font-size: .9em;	
+	margin-top: 2px;
+}
+
+.location_svg {
+	height: 1.3em;
+	width: auto;
+	padding-right: 7px;	
+}
+
+.locationDiv {
+	color: #EF2C23;
+	margin-top: 4px;	
+}
