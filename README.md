@@ -19,7 +19,7 @@ Partially done CSS for iOS and Android (no images yet)
 
 <h3>Christina</h3>
 
-For any changes to graphics, you can update the github repo here. Do let us know so we can pull :)
+For any changes to graphics, you can update the appropriate folder here. I believe the files are under images/. Do let us know so we can pull :)
 
 <h3>Jeff</h3>
 
