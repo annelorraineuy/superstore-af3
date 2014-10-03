@@ -1,7 +1,7 @@
 
 <b>Superstore App - Intel XDK</b>
 
-(c) Anne Lorraine Uy, Christina Chan, Jeff Fung
+&copy; Anne Lorraine Uy, Christina Chan, Jeff Fung
 
 Hi team (Christina and Jeff),
 
