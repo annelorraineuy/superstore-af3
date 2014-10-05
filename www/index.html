@@ -170,7 +170,7 @@
 					category = data.rows.item(0).cat_name;
 					
 					//format html
-					var formatHtml= "<img src='"+imageUrl+"' class='bigItemPic'><div class='bigItemBrand textCenter upper'>"+brandName+"</div><div class='bigItemName textCenter upper'>"+itemName+"</div><div class='bigLocationDiv'><img src='images/location_ico_bigger.svg' class='bigLocation'>AISLE "+aisle+" SHELF "+shelf+"</div>";
+					var formatHtml= "<img src='"+imageUrl+"' class='bigItemPic'><div class='bigItemBrand textCenter upper'>"+brandName+"</div><div class='bigItemName textCenter upper'>"+itemName+"</div><div class='bigLocationDiv'><img src='images/location_ico_bigger.svg' class='bigLocation'>AISLE "+aisle+" SHELF "+shelf+"</div><div class='itemDetails'><img src='images/money_icon.svg'>$"+price+"<br><img src='images/weigh_icon.svg'>"+qty+"<br><img src='images/description_icon.svg'>"+category+"</div>";
 					
 					$(".itemWrapper").html(formatHtml);
 				}, function (error) { //on error 

@@ -107,10 +107,23 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
 .bigLocation {
 	height: 1.2em;
 	padding-right: 10px;
+	vertical-align: middle;
 }
 
 .map {
 	display: block;
 	height: 500px;
 	margin: 0 0 -10px -10px;
+}
+
+.itemDetails {
+	font-size: 1.4em;
+	margin: .5em .5em 0 .5em;
+	line-height: 200%;
+}
+
+.itemDetails img {
+	height: 30px;
+	vertical-align: middle;
+	padding-right: 8px;
 }
