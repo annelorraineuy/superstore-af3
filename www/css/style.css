@@ -30,9 +30,10 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
 }
 
 .resultsItem {
-	text-transform: uppercase;	
 	font-size: 1.2em;
 	letter-spacing: .5px;
+	height: 100px;
+	width: 100%;
 }
 
 .itemPrice {
@@ -55,12 +56,61 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
 }
 
 .location_svg {
-	height: 1.3em;
+	height: 1em;
 	width: auto;
-	padding-right: 7px;	
+	padding-right: 5px;	
 }
 
 .locationDiv {
 	color: #EF2C23;
 	margin-top: 4px;	
+}
+
+.itemLink {
+	display: block;
+}
+
+.bigItemPic {
+	max-width: 90%;
+	max-height: 400px;
+	display: block;
+	margin: 2em auto 0 auto;
+}
+
+.textCenter{
+	text-align: center;
+}
+
+.upper{
+	text-transform: uppercase;	
+}
+
+.bigItemBrand {
+	font-size: 2em;
+	font-weight: 500;	
+	padding-top: 15px;
+}
+
+.bigItemName {
+	font-size: 1.2em;
+	padding-top: 5px;
+}
+
+.bigLocationDiv {
+	background-color: rgb(238, 45, 36);
+	color: #fff;
+	font-size: 1.3em;
+	padding: .9em;
+	margin: .5em .5em 0 .5em;
+}
+
+.bigLocation {
+	height: 1.2em;
+	padding-right: 10px;
+}
+
+.map {
+	display: block;
+	height: 500px;
+	margin: 0 0 -10px -10px;
 }

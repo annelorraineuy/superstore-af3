@@ -1663,7 +1663,7 @@ body {
 #afui.android input[type="number"], #afui.android input[type="email"],
 #afui.android input[type="url"], #afui.android input[type="tel"],
 #afui.android input[type="color"], #afui.android .input-group {
-	background-color:##fff;
+	background-color:#fff;
 	color:inherit;
 }
 
