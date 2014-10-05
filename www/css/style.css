@@ -9,6 +9,8 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
 
 /* start Superstore CSS from here on */
 
+a { text-decoration: none; }
+
 .searchFieldDiv {
     margin-top: .5em; 
     width: 100%; 
