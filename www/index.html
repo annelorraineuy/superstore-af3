@@ -31,11 +31,6 @@
 	var onItemID = null; 
 
 	$(document).ready(function(e) {
-        $("#addItem").bind("click", function() {
-			console.log("Got Task");
-			insertItem();
-		});
-		
 		/*
 		Find out what is clicked
 		$("body").click(function(event) {
@@ -45,6 +40,11 @@
 		$("#searchResults-ul").on("click", "a", function (e) {
     		e.preventDefault();
     		onItemID = $(this).closest("li").attr("id");
+		});
+		
+		$("#searchFieldDiv").on("input", function() {
+			if(this.value != "")
+				searchItems(this.value);	
 		});
 		
     });
@@ -142,7 +142,10 @@
         t.executeSql(q, null, function (t, data) {
     		var html = "";
             for (var i = 0; i < data.rows.length; i++) {
-                  html += "<li class='resultsItem upper' id='"+data.rows.item(i).item_ID+"'><a href='#item-page' class='itemLink'><img src='"+ data.rows.item(i).pic_url + "' class='item_thumb' /><div class='itemPrice'>$"+data.rows.item(i).price +"</div><div class='itemBrand'>" +data.rows.item(i).brand + "</div><div class='nameItem'>" +data.rows.item(i).item_name + "</div><div class='locationDiv'><img src='images/location_icon.svg' class='location_svg' />Aisle "+data.rows.item(i).aisle_ID+" SHELF "+data.rows.item(i).shelf_ID+"</div></a></li>";
+				if (data.rows.item(i).shelf_ID != "")
+					var	shelf = "SHELF "+data.rows.item(i).shelf_ID;
+				else shelf = "";
+                 html += "<li class='resultsItem upper' id='"+data.rows.item(i).item_ID+"'><a href='#item-page' class='itemLink'><img src='"+ data.rows.item(i).pic_url + "' class='item_thumb' /><div class='itemPrice'>$"+data.rows.item(i).price.toFixed(2) +"</div><div class='itemBrand'>" +data.rows.item(i).brand + "</div><div class='nameItem'>" +data.rows.item(i).item_name + "</div><div class='locationDiv'><img src='images/location_icon.svg' class='location_svg' />Aisle "+data.rows.item(i).aisle_ID+" "+shelf+"</div></a></li>";
 			}
             var searchResultsList= document.getElementById("searchResults-ul");
             searchResultsList.innerHTML = html;
@@ -154,7 +157,7 @@
 	{
 		if (onItemID != null)
 		{
-			var q = "SELECT * FROM items, product, category WHERE items.item_ID=? AND items.prod_ID = product.prod_ID AND product.cat_ID = category.cat_ID";
+			var q = "SELECT item_ID, pic_url, item_name, aisle_ID, shelf_ID, brand, price, quantity, cat_name FROM items, product, category WHERE items.item_ID=? AND items.prod_ID = product.prod_ID AND product.cat_ID = category.cat_ID";
 			db.transaction(function(t) {
 				t.executeSql(q, [onItemID], function(t, data) {
 					var imageUrl, aisle, shelf, itemName, brandName, price, qty, category;
@@ -163,14 +166,16 @@
 					imageUrl = data.rows.item(0).pic_url;
 					itemName = data.rows.item(0).item_name;
 					aisle = data.rows.item(0).aisle_ID;
-					shelf = data.rows.item(0).shelf_ID;
+					if (data.rows.item(0).shelf_ID != "")
+						shelf = "SHELF "+data.rows.item(0).shelf_ID;
+					else shelf = "";
 					brandName = data.rows.item(0).brand;
-					price = data.rows.item(0).price;
+					price = data.rows.item(0).price.toFixed(2);
 					qty = data.rows.item(0).quantity;
 					category = data.rows.item(0).cat_name;
 					
 					//format html
-					var formatHtml= "<img src='"+imageUrl+"' class='bigItemPic'><div class='bigItemBrand textCenter upper'>"+brandName+"</div><div class='bigItemName textCenter upper'>"+itemName+"</div><a href='#dedicated-map'><div class='bigLocationDiv'><img src='images/location_ico_bigger.svg' class='bigLocation'>AISLE "+aisle+" SHELF "+shelf+"</div></a><div class='itemDetails'><img src='images/money_icon.svg'>$"+price+"<br><img src='images/weigh_icon.svg'>"+qty+"<br><img src='images/description_icon.svg'>"+category+"</div>";
+					var formatHtml= "<img src='"+imageUrl+"' class='bigItemPic'><div class='bigItemBrand textCenter upper'>"+brandName+"</div><div class='bigItemName textCenter upper'>"+itemName+"</div><a href='#dedicated-map'><div class='bigLocationDiv'><img src='images/location_ico_bigger.svg' class='bigLocation'>AISLE "+aisle+" "+shelf+"</div></a><div class='itemDetails'><img src='images/money_icon.svg'>$"+price+"<br><img src='images/weigh_icon.svg'>"+qty+"<br><img src='images/description_icon.svg'>"+category+"</div>";
 					
 					$(".itemWrapper").html(formatHtml);
 				}, function (error) { //on error 
@@ -178,6 +183,36 @@
 					});	
 			});
 		}
+	}
+	
+	function searchItems(keyword) {
+		keyword = keyword.toLowerCase();
+		console.log(keyword);
+		
+		var q = "SELECT item_name, brand, manufacturer, prod_name, cat_name FROM items, product, category WHERE item_name LIKE ? OR brand LIKE ? OR manufacturer LIKE ? OR prod_name LIKE ? OR cat_name LIKE ? ORDER BY item_name";
+			db.transaction(function(t) {
+				t.executeSql(q, [onItemID], function(t, data) {
+					var imageUrl, aisle, shelf, itemName, brandName, price, qty, category;
+					
+					//get all variables
+					imageUrl = data.rows.item(0).pic_url;
+					itemName = data.rows.item(0).item_name;
+					aisle = data.rows.item(0).aisle_ID;
+					if (data.rows.item(0).shelf_ID != "")
+						shelf = "SHELF "+data.rows.item(0).shelf_ID;
+					else shelf = "";
+					brandName = data.rows.item(0).brand;
+					price = data.rows.item(0).price.toFixed(2);
+					qty = data.rows.item(0).quantity;
+					category = data.rows.item(0).cat_name;
+					
+					//format html
+					var formatHtml= "<img src='"+imageUrl+"' class='bigItemPic'><div class='bigItemBrand textCenter upper'>"+brandName+"</div><div class='bigItemName textCenter upper'>"+itemName+"</div><a href='#dedicated-map'><div class='bigLocationDiv'><img src='images/location_ico_bigger.svg' class='bigLocation'>AISLE "+aisle+" "+shelf+"</div></a><div class='itemDetails'><img src='images/money_icon.svg'>$"+price+"<br><img src='images/weigh_icon.svg'>"+qty+"<br><img src='images/description_icon.svg'>"+category+"</div>";
+					
+				}, function (error) { //on error 
+					$(".itemWrapper").html("<br><h2>Sorry for the inconvenience</h2><p>There was an error that occured. Please contact support.</p><br><p> Error: "+error+"</p>");
+					});	
+			});
 	}
 </script>
 <script>
@@ -197,20 +232,9 @@
 <div id="afui" class="ios">
     <div id="header" class="header"></div>
     <div id="content" style="">
-        <div class="panel" title="" id="main" selected="selected" style="" data-appbuilder-object="page"
-        data-header="none" data-footer="footer">
-            <input type="search" id="searchFieldDiv" class="searchFieldDiv" name="searchFieldDiv"
-            placeholder="Where can I find...?"><a class="button" href="#search-results" data-appbuilder-object="button"
-            data-transition="slide" id="search-button">Search</a>
-            <!--<a class="button" href="#add-item" style="" data-appbuilder-object="button" data-transition="slide"
-            id="add-item-button">Add Item</a>-->
-        </div>
-        <div class="panel" title="search results" data-nav="nav_0" id="search-results"
-        data-appbuilder-object="page" style="" data-header="header_no_backbutton"
-        data-footer="footer">
+        <div class="panel" title="search results" selected="selected" data-nav="nav_0" id="search-results" data-appbuilder-object="page" style="" data-header="header_no_backbutton" data-footer="footer">
             <div id="searchBarDiv">
-                <input type="search" id="searchFieldDiv" class="searchFieldDiv" name="searchFieldDiv"
-                placeholder="Where can I find...?">
+                <input type="search" id="searchFieldDiv" class="searchField" name="searchFieldDiv" placeholder="Where can I find...?" autofocus><a class="button icon magnifier" href="#search-results" data-appbuilder-object="button" data-transition="slide" id="search-button" style="border:none;color:#fff;"></a>
             </div>
             <ul class="list" id="searchResults-ul" data-appbuilder-object="list"></ul>
             <!-- /search list UL -->
@@ -237,21 +261,16 @@
             <button id="addItem" data-appbuilder-object="button" class="">Add Item</button>
         </div>
         <!-- /add item-->
-        <div class="panel" title="Item Page" data-nav="sideMenu" data-load="selItem" id="item-page"
-        data-appbuilder-object="page" style="" data-header="header_backbutton"
-        data-footer="none">
-            <div class="itemWrapper"></div>
+        <div class="panel" title="Item Page" data-nav="sideMenu" data-load="selItem" id="item-page" data-appbuilder-object="page"
+        style="" data-header="header_backbutton" data-footer="none">
+		<div class="itemWrapper"></div>
         </div>
         <!-- /item page -->
         <div class="panel" title="Map" data-nav="sideMenu" id="map" data-appbuilder-object="page"
-        style="" data-header="default" data-footer="none" data-modal="true">
-            <img src="images/map-all.svg" class="map">
-        </div>
+        style="" data-header="default" data-footer="none" data-modal="true"><img src="images/map-all.svg" class="map"></div>
         <!-- /common map -->
         <div class="panel" title="Map" data-nav="sideMenu" id="dedicated-map" data-appbuilder-object="page"
-        style="" data-header="default" data-footer="none" data-modal="true">
-            <img src="images/map-all.svg" class="map">
-        </div>
+        style="" data-header="default" data-footer="none" data-modal="true"><img src="images/map-all.svg" class="map"></div>
         <!-- dedicated map-->
     </div>
     <!-- /content -->
@@ -274,9 +293,4 @@
 
 </div>
 </body>
-
-
-
-
-
 </html>

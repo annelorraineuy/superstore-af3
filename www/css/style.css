@@ -11,7 +11,7 @@ article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, 
 
 a { text-decoration: none; }
 
-.searchFieldDiv {
+.searchField {
     margin-top: .5em; 
     width: 100%; 
     overflow: hidden;
@@ -46,15 +46,18 @@ a { text-decoration: none; }
 }
 
 .itemBrand {
-	color: #595959;
+	/*color: #595959;*/
+	color: #000;
 	font-weight: 500;
 	font-size: 1.2em;	
 	padding-bottom: 2px;
 }
 
 .nameItem {
+	color: #000;
 	font-size: .9em;	
 	margin-top: 2px;
+	text-transform:capitalize;
 }
 
 .location_svg {
@@ -95,6 +98,7 @@ a { text-decoration: none; }
 }
 
 .bigItemName {
+	text-transform: capitalize;
 	font-size: 1.2em;
 	padding-top: 5px;
 	color: #53575E;

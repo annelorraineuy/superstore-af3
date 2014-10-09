@@ -1134,6 +1134,7 @@ body {
 }
 #afui input[type="search"] {
   border-radius: 20px;
+  width: 87%;
 }
 #afui label {
   float: left;
