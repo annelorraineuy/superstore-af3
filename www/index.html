@@ -114,26 +114,6 @@
 		console.log("leaving readItems()");
 	}
 	
-	function insertItem() {
-		 if(!db)
-		{                
-			return;                
-		}
-		var itemName = document.getElementById("itemName").value;
-		var itemPrice = document.getElementById("itemPrice").value;
-		var brand = document.getElementById("brand").value;
-		var manufacturer = document.getElementById("manufacturer").value;
-		var quantity = document.getElementById("quantity").value;
-		var itemPic = document.getElementById("itemPicURL").value;
-	
-		db.transaction(function (t) { 
-			t.executeSql("INSERT INTO items('item_name','brand','manufacturer','quantity','price','pic_url') values('" + itemName + "', '" + brand + "', '" + manufacturer + "', '" + quantity + "', '" + itemPrice + "', '" + itemPic + "');", [], selRows, databaseError);
-			alert("Row Inserted!");
-			selRows();
-		});	
-	}
-
-	
 	function selRows() {
     
     var q = "SELECT * FROM items, product WHERE items.prod_ID = product.prod_ID";
@@ -189,30 +169,47 @@
 		keyword = keyword.toLowerCase();
 		console.log(keyword);
 		
-		var q = "SELECT item_name, brand, manufacturer, prod_name, cat_name FROM items, product, category WHERE item_name LIKE ? OR brand LIKE ? OR manufacturer LIKE ? OR prod_name LIKE ? OR cat_name LIKE ? ORDER BY item_name";
-			db.transaction(function(t) {
-				t.executeSql(q, [onItemID], function(t, data) {
-					var imageUrl, aisle, shelf, itemName, brandName, price, qty, category;
-					
-					//get all variables
-					imageUrl = data.rows.item(0).pic_url;
-					itemName = data.rows.item(0).item_name;
-					aisle = data.rows.item(0).aisle_ID;
-					if (data.rows.item(0).shelf_ID != "")
-						shelf = "SHELF "+data.rows.item(0).shelf_ID;
-					else shelf = "";
-					brandName = data.rows.item(0).brand;
-					price = data.rows.item(0).price.toFixed(2);
-					qty = data.rows.item(0).quantity;
-					category = data.rows.item(0).cat_name;
-					
-					//format html
-					var formatHtml= "<img src='"+imageUrl+"' class='bigItemPic'><div class='bigItemBrand textCenter upper'>"+brandName+"</div><div class='bigItemName textCenter upper'>"+itemName+"</div><a href='#dedicated-map'><div class='bigLocationDiv'><img src='images/location_ico_bigger.svg' class='bigLocation'>AISLE "+aisle+" "+shelf+"</div></a><div class='itemDetails'><img src='images/money_icon.svg'>$"+price+"<br><img src='images/weigh_icon.svg'>"+qty+"<br><img src='images/description_icon.svg'>"+category+"</div>";
+		if (keyword != "")
+		{
+			var item_ID, imageUrl, prod_ID, itemName, brandName, price;
+			var find_query = "SELECT DISTINCT item_ID, item_name, brand, manufacturer, price, prod_ID, pic_url FROM items WHERE item_name LIKE '%"+keyword+"%' OR brand LIKE '%"+keyword+"%'";
+				db.transaction(function(t) {
+					t.executeSql(find_query, null, function(t, data) {
+						$("#searchResults-ul").html("");
+						for (var i = 0; i < data.rows.length; i++) {
+							prod_ID = data.rows.item(i).prod_ID; 
+							imageUrl = data.rows.item(i).pic_url;
+							itemName = data.rows.item(i).item_name;	
+							price = data.rows.item(i).price;	
+							item_ID = data.rows.item(i).item_ID;	
+							brandName = data.rows.item(i).brand;
+								
+							//get shelf and aisle info	
+							getShelfandAisle(prod_ID, item_ID, imageUrl, itemName, price, brandName);
+						} // end of for loop
 					
 				}, function (error) { //on error 
-					$(".itemWrapper").html("<br><h2>Sorry for the inconvenience</h2><p>There was an error that occured. Please contact support.</p><br><p> Error: "+error+"</p>");
-					});	
-			});
+					$("#searchResults-ul").html("<br><h2>Sorry for the inconvenience</h2><p>There was an error that occured. Please contact support at superstoreapp@bulldogdev.com.</p><br><p> Error: "+error+"</p>");
+					});	// end of data 1
+			}); // end of data 1
+		} //end of if check on keyword
+	}
+	
+	function getShelfandAisle(prod_ID, item_ID, imageUrl, itemName, price, brandName) {
+		var html = "";
+		db.transaction(function(st) { 
+			console.log("item name "+itemName);
+			var getShelfandAisleQ = "SELECT shelf_ID, aisle_ID FROM product WHERE prod_ID = ?";
+			st.executeSql(getShelfandAisleQ, [prod_ID], function(st, data2) {
+				if (data2.rows.item(0).shelf_ID != "")
+					var	shelf = "SHELF "+data2.rows.item(0).shelf_ID;
+				else shelf = "";
+				var aisle = data2.rows.item(0).aisle_ID;
+									
+				 html += "<li class='resultsItem upper' id='"+item_ID+"'><a href='#item-page' class='itemLink'><img src='"+ imageUrl+ "' class='item_thumb' /><div class='itemPrice'>$"+price.toFixed(2) +"</div><div class='itemBrand'>" +brandName + "</div><div class='nameItem'>" +itemName+ "</div><div class='locationDiv'><img src='images/location_icon.svg' class='location_svg' />Aisle "+aisle+" "+shelf+"</div></a></li>";
+				$("#searchResults-ul").append(html);
+			}); //end of executesql data2
+		});// end of db transaction 2	
 	}
 </script>
 <script>
@@ -232,9 +229,14 @@
 <div id="afui" class="ios">
     <div id="header" class="header"></div>
     <div id="content" style="">
-        <div class="panel" title="search results" selected="selected" data-nav="nav_0" id="search-results" data-appbuilder-object="page" style="" data-header="header_no_backbutton" data-footer="footer">
+        <div class="panel" title="Search" selected="selected" data-nav="nav_0" id="search-results"
+        data-appbuilder-object="page" style="" data-header="header_no_backbutton"
+        data-footer="footer">
             <div id="searchBarDiv">
-                <input type="search" id="searchFieldDiv" class="searchField" name="searchFieldDiv" placeholder="Where can I find...?" autofocus><a class="button icon magnifier" href="#search-results" data-appbuilder-object="button" data-transition="slide" id="search-button" style="border:none;color:#fff;"></a>
+                <input type="search" id="searchFieldDiv" class="searchField" name="searchFieldDiv"
+                placeholder="Where can I find...?" autofocus>
+                <!--<a class="button icon magnifier" href="#search-results" data-appbuilder-object="button"
+                data-transition="slide" id="search-button" style="border:none;color:#fff;"></a>-->
             </div>
             <ul class="list" id="searchResults-ul" data-appbuilder-object="list"></ul>
             <!-- /search list UL -->
@@ -261,16 +263,21 @@
             <button id="addItem" data-appbuilder-object="button" class="">Add Item</button>
         </div>
         <!-- /add item-->
-        <div class="panel" title="Item Page" data-nav="sideMenu" data-load="selItem" id="item-page" data-appbuilder-object="page"
-        style="" data-header="header_backbutton" data-footer="none">
-		<div class="itemWrapper"></div>
+        <div class="panel" title="Item Page" data-nav="sideMenu" data-load="selItem" id="item-page"
+        data-appbuilder-object="page" style="" data-header="header_backbutton"
+        data-footer="none">
+            <div class="itemWrapper"></div>
         </div>
         <!-- /item page -->
         <div class="panel" title="Map" data-nav="sideMenu" id="map" data-appbuilder-object="page"
-        style="" data-header="default" data-footer="none" data-modal="true"><img src="images/map-all.svg" class="map"></div>
+        style="" data-header="default" data-footer="none" data-modal="true">
+            <img src="images/map-all.svg" class="map">
+        </div>
         <!-- /common map -->
         <div class="panel" title="Map" data-nav="sideMenu" id="dedicated-map" data-appbuilder-object="page"
-        style="" data-header="default" data-footer="none" data-modal="true"><img src="images/map-all.svg" class="map"></div>
+        style="" data-header="default" data-footer="none" data-modal="true">
+            <img src="images/map-all.svg" class="map">
+        </div>
         <!-- dedicated map-->
     </div>
     <!-- /content -->
@@ -288,9 +295,11 @@
         <h1 class="">Item Details</h1>
     </header>
     <header id="header_no_backbutton" data-appbuilder-object="header">
-        <h1 class="">Search Results</h1>
+        <h1 class="">Search</h1>
     </header>
 
 </div>
 </body>
+
+
 </html>

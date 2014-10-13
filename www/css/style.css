@@ -94,14 +94,15 @@ a { text-decoration: none; }
 	font-size: 2em;
 	font-weight: 500;	
 	padding-top: 15px;
-	color: #53575E;
+	/*color: #53575E;*/
+	color: #000;
 }
 
 .bigItemName {
 	text-transform: capitalize;
 	font-size: 1.2em;
 	padding-top: 5px;
-	color: #53575E;
+	color: #000;
 }
 
 .bigLocationDiv {
@@ -125,7 +126,7 @@ a { text-decoration: none; }
 }
 
 .itemDetails {
-	color: #53575E;
+	color: #000;
 	font-size: 1.4em;
 	margin: .5em .5em 0 .5em;
 	line-height: 200%;
