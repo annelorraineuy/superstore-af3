@@ -29,6 +29,7 @@
 	var db = createTables();
 	var query;
 	var onItemID = null; 
+	readForJsonExport(); //export database to JSON
 
 	$(document).ready(function(e) {
 		/*
@@ -75,8 +76,6 @@
 		}
 		else
 		{
-			
-			console.log("going to create table category");
 			db = openDB("superstore_dbc","1.0","Superstore Client Database", 2*1024*1024);
 			
 			db.transaction(function (t) {
@@ -93,29 +92,44 @@
 					});
 				});
 			
-			 selRows();
+			 selRows(); //populate list with all items
 			return db;
     	}            
 	}
 	
-	function successQuery() {
-		alert("successfully created table!");	
-	}
 	
 	function databaseError(err) {
 		alert("Error: "+err);
 	}
 	
-	function readItems() {
-		console.log("Entering readItems()");
+	function readForJsonExport() {
+		var dataJSON = [];
 		db.transaction(function(t) {
-			t.executeSql('SELECT * from items', [], selRows, databaseError);	
+			t.executeSql('SELECT * from items', [], function(t, data) {
+				for (var i=0; i < data.rows.length; i++)
+					dataJSON[i] = data.rows.item(i);
+					
+				var evaldata = JSON.stringify(dataJSON);
+				console.log(evaldata);
+				
+				var cs_db;
+				//get server-side db items
+				$.ajax({
+						type:"GET",
+						async: false,
+						url:"data/ss_db_10132014.json",
+						success:function(data){
+							//cs_db = JSON.parse(data);
+							console.log("2 "+JSON.stringify(data)); 
+						}
+					});
+		
+			}, databaseError);	
+			
 		}, databaseError);
-		console.log("leaving readItems()");
 	}
 	
 	function selRows() {
-    
     var q = "SELECT * FROM items, product WHERE items.prod_ID = product.prod_ID";
     
     db.readTransaction(function (t) {
@@ -211,6 +225,7 @@
 			}); //end of executesql data2
 		});// end of db transaction 2	
 	}
+
 </script>
 <script>
     if(isIntel)
@@ -276,9 +291,9 @@
         <!-- /common map -->
         <div class="panel" title="Map" data-nav="sideMenu" id="dedicated-map" data-appbuilder-object="page"
         style="" data-header="default" data-footer="none" data-modal="true">
-            <img src="images/map-all.svg" class="map">
+     		<div id="grayedOutPanel"><img src="maps/MAP_frozenfoods.png" class="dedicatedMap"></div>
         </div>
-        <!-- dedicated map-->
+        <!-- /dedicated map-->
     </div>
     <!-- /content -->
 
@@ -303,3 +318,5 @@
 
 
 </html>
+
+

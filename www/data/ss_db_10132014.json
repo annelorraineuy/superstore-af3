@@ -1,0 +1,32 @@
+[
+  {
+    "item_ID": 1,
+    "item_name": "Plain greek yogurt",
+    "brand": "Danone",
+    "manufacturer": "Danone",
+    "quantity": "50g",
+    "price": 5.5,
+    "pic_url": "http://larrythedood.files.wordpress.com/2011/06/dannon-greek-yogurt.jpg",
+    "prod_ID": 1
+  },
+  {
+    "item_ID": 2,
+    "item_name": "Yellow Bananas",
+    "brand": "Bananas",
+    "manufacturer": "Bananas",
+    "quantity": "per kg",
+    "price": 1,
+    "pic_url": "http://www.nlj.gov.jm/FeastingontheHeritage/ripe%20bananas.jpg",
+    "prod_ID": 47
+  },
+  {
+    "item_ID": 3,
+    "item_name": "Whipped Cream",
+    "brand": "Dairy Whip",
+    "manufacturer": "Tatua",
+    "quantity": "300g",
+    "price": 6.5,
+    "pic_url": "http://www.fonterrafoodservices.com.au/media/products/l29000001.jpg",
+    "prod_ID": 7
+  }
+]
