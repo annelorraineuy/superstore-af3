@@ -150,3 +150,10 @@ a { text-decoration: none; }
 	margin-left: -1em;
 	padding: 0;
 }
+
+.errorMap {
+	text-align: center;
+	color: #FF4A4D;
+	background-color: #fff;
+	padding: 1em;
+}
