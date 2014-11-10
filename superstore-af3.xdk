@@ -8,7 +8,7 @@
       "src": "appStarter",
       "sourceDirectory": "www",
       "projectGuid": "968e509d-d482-4e70-a315-5b4a23fb2c1e",
-      "lastModifiedDate": 1412025000509,
+      "lastModifiedDate": 1415301446118,
       "creationDate": 1412025000426
     },
     "XDK-app-starter": "true",
@@ -230,20 +230,75 @@
       "Android": {
         "platform_": "android",
         "name_": "Android",
-        "preferences_": {},
+        "preferences_": {
+          "Orientation": "portrait"
+        },
         "isActive_": true,
-        "appName_": "superstore-af3",
+        "appName_": "superstore-1",
         "appID_": "not.yet.specified",
         "appAccess_": "*",
-        "icons_": [],
-        "splashes_": [],
+        "icons_": [
+          {
+            "relPath": "kitchensink/andr-ic-96.png",
+            "density": "xhdpi",
+            "height": 96,
+            "width": 96
+          },
+          {
+            "relPath": "kitchensink/andr-ic-72.png",
+            "density": "hdpi",
+            "height": 72,
+            "width": 72
+          },
+          {
+            "relPath": "kitchensink/andr-ic-48.png",
+            "density": "mdpi",
+            "height": 48,
+            "width": 48
+          },
+          {
+            "relPath": "kitchensink/andr-ic-36.png",
+            "density": "ldpi",
+            "height": 36,
+            "width": 36
+          }
+        ],
+        "splashes_": [
+          {
+            "relPath": "kitchensink/android-320x426b.jpg",
+            "density": "ldpi",
+            "height": 426,
+            "width": 320
+          },
+          {
+            "relPath": "kitchensink/android-320x470.jpg",
+            "density": "mdpi",
+            "height": 470,
+            "width": 320
+          },
+          {
+            "relPath": "kitchensink/android-480.jpg",
+            "density": "hdpi",
+            "height": 640,
+            "width": 480
+          },
+          {
+            "relPath": "kitchensink/android-720.jpg",
+            "density": "xhdpi",
+            "height": 960,
+            "width": 720
+          }
+        ],
         "iosProvs_": [],
         "addlPermissions_": "",
         "excludedLibraries_": "",
         "cordovaCLIVersion_": "3.3",
         "crosswalkVersion_": "stable",
         "appVersion_": "1.0.0",
-        "runtime_": "Cordova 3.x"
+        "runtime_": "Cordova 3.x",
+        "appDescription_": "Superstore Grocery Item Finder",
+        "appAuthor_": "Anne Uy, Christina Chan & Jeff Fung",
+        "appVersionCode_": "1"
       },
       "Android-Crosswalk": {
         "platform_": "android",

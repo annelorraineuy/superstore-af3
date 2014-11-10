@@ -7759,3 +7759,1027 @@ Nov 3, 2014 8:07PM added dynamic map functionality  yipee!
 </div>
 </body>
 </html>
+
+Nov 10, 2014 8:52AM -successfully escaped ' with ''
+<!DOCTYPE html>
+<html><!--after broke links, Superstore AF-->
+
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta http-equiv="Pragma" content="no-cache">
+<link href="css/style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" charset="utf-8" src="intelxdk.js"></script>
+<script src="js/appframework.ui.min.js"></script>
+<script type="text/javascript" language="javascript">
+    var isIntel=window.intel&&window.intel.xdk
+    // This event handler is fired once the intel libraries are ready
+    function onDeviceReady() {
+        //hide splash screen now that our app is ready to run
+       intel.xdk.device.hideSplashScreen();
+        setTimeout(function () {
+            $.ui.launch();
+        }, 50);
+		
+		//lock in "portrait" orientation 
+		intel.xdk.device.setRotateOrientation("portrait");
+    }
+    //initial event handler to detect when intel is ready to roll
+    document.addEventListener("intel.xdk.device.ready", onDeviceReady, false);
+	
+	//global stuff
+	var db = createTables();
+	var query;
+	var onItemID = null; 
+	var onAisle = null;
+
+	$(document).ready(function(e) {
+		/*
+		Find out what is clicked
+		$("body").click(function(event) {
+			alert(event.target.id+" and "+event.target.className);	
+		});*/
+		
+		$("#searchResults-ul").on("click", "a", function (e) {
+    		e.preventDefault();
+    		onItemID = $(this).closest("li").attr("id");
+		});
+		
+		$("#searchFieldDiv").on("input", function() {
+			if(this.value != "")
+				searchItems(this.value);	
+		});
+		
+    });
+	
+	//start webSQL
+	function getOpenDb() { 
+		try {
+			if (window.openDatabase) {                    
+				return window.openDatabase;                  
+			} else {
+				alert('No HTML5 support');
+				return undefined;
+			}
+		}
+		catch (e) {
+			alert(e);
+			return undefined;
+		}            
+	}
+	
+	function createTables() {
+		var openDB = getOpenDb();
+		
+		if(!openDB)
+		{                
+			return; 
+			alert("Error: failed to create database.");              
+		}
+		else
+		{
+			db = openDB("superstore_dbc","1.0","Superstore Client Database", 2*1024*1024);
+			
+			db.transaction(function (t) {
+				$.ajax({
+						type:"GET",
+						async: false,
+						url:"data/websql-queries.txt",
+						success:function(data){
+								query = data.split("\n"); //read the sql queries from text file line by line
+								
+								for(var i=0; i < query.length; i++)
+									t.executeSql(query[i], [], null, databaseError);     
+							}
+					});
+				});
+				
+			readForJsonExport(); //export database to JSON
+			return db;
+    	}            
+	}
+	
+	
+	function databaseError(err) {
+		alert("Error: "+err);
+	}
+	
+	function readForJsonExport() {
+		var dataJSON = [];
+		db.transaction(function(t) {
+			t.executeSql('SELECT * from items', [], function(t, data) {
+				for (var i=0; i < data.rows.length; i++)
+					dataJSON[i] = data.rows.item(i);
+					
+				var evaldata = JSON.stringify(dataJSON);
+				console.log("currently: "+evaldata);
+				
+				//get server-side db categories
+				$.ajax({
+						type:"GET",
+						async: false,
+						url:"data/ss_db_category_110614.json",
+						success:function(newData){
+							console.log("going in categories...");
+							//newData = newData.replace(/\\/g, '');
+							console.log("unparsed data "+newData);
+							//newData = $.parseJSON(newData);
+							//console.log("parsed data "+newData);
+							updateCategoriesDB(newData); //update items
+						},
+						error: function(xhr, status, error) {
+						  console.log(arguments);
+						  console.log(error);
+						},
+					});
+					
+				//get server-side db products
+				$.ajax({
+						type:"GET",
+						async: false,
+						url:"data/ss_db_product_110614.json",
+						success:function(newData){
+							console.log("going in products...");
+							//newData = newData.replace(/\\/g, '');
+							//console.log(newData);
+							//newData = $.parseJSON(newData);
+							console.log(newData);
+							updateProductsDB(newData); //update products
+						},
+						error: function(xhr, status, error) {
+						  console.log(arguments);
+						  console.log(error);
+						},
+					});
+					
+				//get server-side db items
+				$.ajax({
+						type:"GET",
+						async: false,
+						url:"http://anneuy.com/superstoreapp2014/item.json",
+						success:function(newData){
+							newData = newData.replace(/\\/g, '');
+							console.log(newData);
+							newData = $.parseJSON(newData);
+							console.log(newData);
+							updateItemsDB(newData); //update items
+						},
+						error: function(xhr, status, error) {
+						  //var err = eval("(" + xhr.responseText + ")");
+						  console.log(arguments);
+						  console.log(error);
+						},
+					});
+		
+			}, databaseError);	
+			
+		}, databaseError);
+	}
+	
+	function updateCategoriesDB(newData) {
+		
+		console.log(newData[0].cat_name);
+		console.log(newData.length);
+		
+		var dropCategories = "DROP TABLE category";
+		var createCategoryTable = "CREATE TABLE IF NOT EXISTS category(cat_ID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, cat_name VARCHAR(60));";	
+		
+		db.transaction(function (t) {
+			t.executeSql(dropCategories, null, updateCategoryTable, null);
+			
+			function updateCategoryTable() {
+				t.executeSql(createCategoryTable, null, function (t, data) {
+					for(var i=0; i < newData.length; i++)
+					{
+						console.log("came in updateCategories "+newData[i].cat_name);
+						var catID = newData[i].cat_ID;
+						var catName = newData[i].cat_name;
+						
+						t.executeSql("INSERT INTO category VALUES (null, '"+catName+"')", null, null, function(t, err) { alert(err); });
+					}
+				}, null);	
+			}
+			
+		});
+	}
+	
+		function updateProductsDB(newData) {
+		
+		console.log(newData[0].prod_name);
+		console.log(newData.length);
+		
+		var dropProducts = "DROP TABLE product";
+		var createProductTable = "CREATE TABLE IF NOT EXISTS product(prod_ID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, prod_name VARCHAR(60) NOT NULL, aisle_ID VARCHAR(10), shelf_ID VARCHAR(2), cat_ID INTEGER, FOREIGN KEY(cat_ID) REFERENCES category(cat_ID));";	
+		
+		db.transaction(function (t) {
+			t.executeSql(dropProducts, null, updateProductTable, null);
+			
+			function updateProductTable() {
+				t.executeSql(createProductTable, null, function (t, data) {
+					for(var i=0; i < newData.length; i++)
+					{
+						console.log("came in updateProducts "+newData[i].prod_name);
+						var prodID = newData[i].prod_ID;
+						var prodName = newData[i].prod_name;
+						var aisle = newData[i].aisle_ID;
+						var shelf = newData[i].shelf_ID;
+						var catID = newData[i].cat_ID;
+						
+						t.executeSql("INSERT INTO product VALUES (null, '"+prodName+"', '"+aisle+"', '"+shelf+"', '"+catID+"')", null, null, function(t, err) { console.log(err); });
+					}
+				}, null);	
+			}
+			
+		});
+	}
+	
+	function updateItemsDB(newData) {
+		
+		console.log(newData[0].item_name);
+		console.log(newData.length);
+		
+		var dropItems = "DROP TABLE items";
+		var createItemTable = "CREATE TABLE IF NOT EXISTS items(item_ID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, item_name VARCHAR(40) NOT NULL, brand VARCHAR(30), manufacturer VARCHAR(40), quantity INTEGER, price DECIMAL(19, 4) NOT NULL, pic_url VARCHAR(50), prod_ID INTEGER, FOREIGN KEY(prod_ID) REFERENCES product(prod_ID));";	
+		
+		db.transaction(function (t) {
+			t.executeSql(dropItems, null, updateItemTable, null);
+			
+			function updateItemTable() {
+				t.executeSql(createItemTable, null, function (t, data) {
+					for(var i=0; i < newData.length; i++)
+					{
+						console.log("came in updatenewitems ");
+						var itemName = newData[i].item_name;
+						itemName = itemName.replace("'","''"); //escape ' or other special characters
+						console.log("item name is "+newData[i].item_name);
+						var itemPrice = newData[i].price;
+						console.log("price is "+itemPrice);
+						var brand = newData[i].brand;
+						brand = brand.replace("'","''");
+						console.log("brand is "+brand);
+						var manufacturer = newData[i].manufacturer;
+						manufacturer =  manufacturer.replace("'","''");
+						console.log("manufacturer is "+manufacturer);
+						var quantity = newData[i].quantity;
+						console.log("qty is "+quantity);
+						var itemPic = newData[i].pic_url;
+						console.log("item pic is "+itemPic);
+						var prod_id = newData[i].prod_ID;
+						console.log("prod ID is "+prod_id);
+						
+						t.executeSql("INSERT INTO items VALUES (null, '"+itemName+"', '"+brand+"', '"+manufacturer+"', '"+quantity+"', '"+itemPrice+"', '"+itemPic+"', '"+prod_id+"')", null, null, function(t, err) { console.log("Update New Items Error: "+err.message); });
+					}
+				}, null);	
+			}
+			
+		});
+		selRows(); //populate list with all items
+	}
+	
+	function selRows() {
+    var q = "SELECT * FROM items, product WHERE items.prod_ID = product.prod_ID";
+    
+    db.readTransaction(function (t) {
+        t.executeSql(q, null, function (t, data) {
+    		var html = "";
+            for (var i = 0; i < data.rows.length; i++) {
+				if (data.rows.item(i).shelf_ID != "")
+					var	shelf = "SHELF "+data.rows.item(i).shelf_ID;
+				else shelf = "";
+                 html += "<li class='resultsItem upper' id='"+data.rows.item(i).item_ID+"'><a href='#item-page' class='itemLink'><img src='"+ data.rows.item(i).pic_url + "' class='item_thumb' /><div class='itemPrice'>$"+data.rows.item(i).price.toFixed(2) +"</div><div class='itemBrand'>" +data.rows.item(i).brand + "</div><div class='nameItem'>" +data.rows.item(i).item_name + "</div><div class='locationDiv'><img src='images/location_icon.svg' class='location_svg' />Aisle "+data.rows.item(i).aisle_ID+" "+shelf+"</div></a></li>";
+			}
+            var searchResultsList= document.getElementById("searchResults-ul");
+            searchResultsList.innerHTML = html;
+        });
+    });
+	}
+	
+	function selItem()
+	{
+		if (onItemID != null)
+		{
+			var q = "SELECT item_ID, pic_url, item_name, aisle_ID, shelf_ID, brand, price, quantity, cat_name FROM items, product, category WHERE items.item_ID=? AND items.prod_ID = product.prod_ID AND product.cat_ID = category.cat_ID";
+			db.transaction(function(t) {
+				t.executeSql(q, [onItemID], function(t, data) {
+					var imageUrl, aisle, shelf, itemName, brandName, price, qty, category;
+					
+					//get all variables
+					imageUrl = data.rows.item(0).pic_url;
+					itemName = data.rows.item(0).item_name;
+					aisle = data.rows.item(0).aisle_ID;
+					onAisle = aisle.toString().toLowerCase();
+					if (data.rows.item(0).shelf_ID != "")
+						shelf = "SHELF "+data.rows.item(0).shelf_ID;
+					else shelf = "";
+					brandName = data.rows.item(0).brand;
+					price = data.rows.item(0).price.toFixed(2);
+					qty = data.rows.item(0).quantity;
+					category = data.rows.item(0).cat_name;
+					
+					//format html
+					var formatHtml= "<img src='"+imageUrl+"' class='bigItemPic'><div class='bigItemBrand textCenter upper'>"+brandName+"</div><div class='bigItemName textCenter upper'>"+itemName+"</div><a href='#dedicated-map'><div class='bigLocationDiv'><img src='images/location_ico_bigger.svg' class='bigLocation'>AISLE "+aisle+" "+shelf+"</div></a><div class='itemDetails'><img src='images/money_icon.svg'>$"+price+"<br><img src='images/weigh_icon.svg'>"+qty+"<br><img src='images/description_icon.svg'>"+category+"</div>";
+					
+					$(".itemWrapper").html(formatHtml);
+				}, function (error) { //on error 
+					$(".itemWrapper").html("<br><h2>Sorry for the inconvenience</h2><p>There was an error that occured. Please contact support.</p><br><p> Error: "+error+"</p>");
+					});	
+			});
+		}
+	}
+	
+	function getMapLoc() {
+		var map, display;
+		switch (onAisle)
+		{
+			case '1': map = "MAP_1.png"; break;
+			case '2': map = "MAP_2.png"; break;
+			case '3': map = "MAP_3.png"; break;
+			case '4': map = "MAP_4.png"; break;
+			case '5': map = "MAP_5.png"; break;
+			case '6': map = "MAP_6.png"; break;
+			case '7': map = "MAP_7.png"; break;
+			case '8': map = "MAP_8.png"; break;
+			case '9': map = "MAP_9.png"; break;
+			case 'baby': map = "MAP_baby.png"; break;
+			case 'bakery': map = "MAP_bakery.png"; break;
+			case 'checkout': map = "MAP_checkout.png"; break;
+			case 'cosmetics': map = "MAP_cosmetics.png"; break;
+			case 'deli': map = "MAP_deli.png"; break;
+			case 'dairy': map = "MAP_dairy.png"; break;
+			case 'electronics': map = "MAP_electronics.png"; break;
+			case 'floral': map = "MAP_floral.png"; break;
+			case 'frozen': map = "MAP_frozen.png"; break;
+			case 'joe': map = "MAP_joe.png"; break;
+			case 'meat': map = "MAP_meat.png"; break;
+			case 'natural': map = "MAP_natural.png"; break;
+			case 'optical': map = "MAP_optical.png"; break;
+			case 'pharmacy': map = "MAP_pharmacy.png"; break;
+			case 'produce': map = "MAP_produce.png"; break;
+			case 'seafood': map = "MAP_seafood.png"; break;
+			case 'toys': map = "MAP_toys.png"; break;
+			default: map= "error"; break;
+		}
+		
+		//error check
+		if (map == "error")
+		{
+			display = "<div class='errorMap'><h2>Sorry for the inconvenience</h2><p>There was an error that occured. Please contact support at superstoreapp@bulldogdev.com and we'll get to fixing this problem right away!</p></div>";
+		} else //show map
+		{
+			display = "<img src='maps/"+map+"' class='dedicatedMap'>";
+		}
+		//attach to window
+		$("#grayedOutPanel").html(display);
+	}
+	
+	function searchItems(keyword) {
+		keyword = keyword.toLowerCase();
+		console.log(keyword);
+		
+		if (keyword != "")
+		{
+			var item_ID, imageUrl, prod_ID, itemName, brandName, price;
+			var find_query = "SELECT DISTINCT item_ID, item_name, brand, manufacturer, price, prod_ID, pic_url FROM items WHERE item_name LIKE '%"+keyword+"%' OR brand LIKE '%"+keyword+"%'";
+				db.transaction(function(t) {
+					t.executeSql(find_query, null, function(t, data) {
+						$("#searchResults-ul").html("");
+						for (var i = 0; i < data.rows.length; i++) {
+							prod_ID = data.rows.item(i).prod_ID; 
+							imageUrl = data.rows.item(i).pic_url;
+							itemName = data.rows.item(i).item_name;	
+							price = data.rows.item(i).price;	
+							item_ID = data.rows.item(i).item_ID;	
+							brandName = data.rows.item(i).brand;
+								
+							//get shelf and aisle info	
+							getShelfandAisle(prod_ID, item_ID, imageUrl, itemName, price, brandName);
+						} // end of for loop
+					
+				}, function (error) { //on error 
+					$("#searchResults-ul").html("<br><h2>Sorry for the inconvenience</h2><p>There was an error that occured. Please contact support at superstoreapp@bulldogdev.com.</p><br><p> Error: "+error+"</p>");
+					});	// end of data 1
+			}); // end of data 1
+		} //end of if check on keyword
+	}
+	
+	function getShelfandAisle(prod_ID, item_ID, imageUrl, itemName, price, brandName) {
+		var html = "";
+		db.transaction(function(st) { 
+			console.log("item name "+itemName);
+			var getShelfandAisleQ = "SELECT shelf_ID, aisle_ID FROM product WHERE prod_ID = ?";
+			st.executeSql(getShelfandAisleQ, [prod_ID], function(st, data2) {
+				if (data2.rows.item(0).shelf_ID != "")
+					var	shelf = "SHELF "+data2.rows.item(0).shelf_ID;
+				else shelf = "";
+				var aisle = data2.rows.item(0).aisle_ID;
+									
+				 html += "<li class='resultsItem upper' id='"+item_ID+"'><a href='#item-page' class='itemLink'><img src='"+ imageUrl+ "' class='item_thumb' /><div class='itemPrice'>$"+price.toFixed(2) +"</div><div class='itemBrand'>" +brandName + "</div><div class='nameItem'>" +itemName+ "</div><div class='locationDiv'><img src='images/location_icon.svg' class='location_svg' />Aisle "+aisle+" "+shelf+"</div></a></li>";
+				$("#searchResults-ul").append(html);
+			}); //end of executesql data2
+		});// end of db transaction 2	
+	}
+</script>
+<script>
+    if(isIntel)
+        $.ui.autoLaunch = false;
+    $.ui.useOSThemes = true; //Change this to false to force a device theme
+    $.ui.blockPageScroll();
+    $(document).ready(function () {
+        if ($.ui.useOSThemes && (!$.os.ios||$.os.ios7))
+            $("#afui").removeClass("ios");
+    });
+</script>
+<link href="css/icons.css" rel="stylesheet" type="text/css">
+<link href="css/af.ui.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+<div id="afui" class="ios">
+    <div id="header" class="header"></div>
+    <div id="content" style="">
+        <div class="panel" title="Search" selected="selected" data-nav="nav_0" id="search-results"
+        data-appbuilder-object="page" style="" data-header="header_no_backbutton"
+        data-footer="footer">
+            <div id="searchBarDiv">
+                <input type="search" id="searchFieldDiv" class="searchField" name="searchFieldDiv"
+                placeholder="Where can I find...?" autofocus>
+                <!--<a class="button icon magnifier" href="#search-results" data-appbuilder-object="button"
+                data-transition="slide" id="search-button" style="border:none;color:#fff;"></a>-->
+            </div>
+            <ul class="list" id="searchResults-ul" data-appbuilder-object="list"></ul>
+            <!-- /search list UL -->
+        </div>
+        <div class="panel" title="Add-Item" data-nav="sideMenu" id="add-item" data-appbuilder-object="page"
+        style="">
+            <label>Item Name:</label>
+            <input type="text" id="itemName">
+            <br>
+            <label>Brand:</label>
+            <input type="text" id="brand">
+            <br>
+            <label>Manufacturer:</label>
+            <input type="text" id="manufacturer">
+            <br>
+            <label>Quantity:</label>
+            <input type="text" id="quantity">
+            <br>
+            <label>Price:</label>
+            <input type="text" id="itemPrice">
+            <br>
+            <label>Picture:</label>
+            <input type="text" id="itemPicURL">
+            <button id="addItem" data-appbuilder-object="button" class="">Add Item</button>
+        </div>
+        <!-- /add item-->
+        <div class="panel" title="Item Page" data-nav="sideMenu" data-load="selItem" id="item-page"
+        data-appbuilder-object="page" style="" data-header="header_backbutton"
+        data-footer="none">
+            <div class="itemWrapper"></div>
+        </div>
+        <!-- /item page -->
+        <div class="panel" title="Map" data-nav="sideMenu" id="map" data-appbuilder-object="page"
+        style="" data-header="default" data-footer="none" data-modal="true">
+            <img src="images/map-all.svg" class="map">
+        </div>
+        <!-- /common map -->
+        <div class="panel" title="Map" data-nav="sideMenu" id="dedicated-map" data-appbuilder-object="page"
+        style="" data-header="default" data-footer="none" data-modal="true" data-load="getMapLoc">
+            <div id="grayedOutPanel">
+                <img src="maps/MAP_frozenfoods.png" class="dedicatedMap">
+            </div>
+        </div>
+        <!-- /dedicated map-->
+    </div>
+    <!-- /content -->
+
+    <div id="navbar" class="footer">
+        <footer></footer>
+    </div>
+
+    <nav id="sideMenu" data-appbuilder-object="nav">
+        <h1>Side Menu</h1>
+    </nav>
+    <footer id="footer" data-appbuilder-object="footer"><a href="#map" class="icon location">Map</a>
+    </footer>
+    <header id="header_backbutton" data-appbuilder-object="header"><a id="backButton" class="button backButton">Back</a>
+        <h1 class="">Item Details</h1>
+    </header>
+    <header id="header_no_backbutton" data-appbuilder-object="header">
+        <h1 class="">Search</h1>
+    </header>
+
+</div>
+</body>
+</html>
+
+Nov 10, 2014 12:54PM Replaced all JSON sources. Now gets data from server.
+<!DOCTYPE html>
+<html><!--after broke links, Superstore AF-->
+
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta http-equiv="Pragma" content="no-cache">
+<link href="css/style.css" rel="stylesheet" type="text/css">
+<script type="text/javascript" charset="utf-8" src="intelxdk.js"></script>
+<script src="js/appframework.ui.min.js"></script>
+<script type="text/javascript" language="javascript">
+    var isIntel=window.intel&&window.intel.xdk
+    // This event handler is fired once the intel libraries are ready
+    function onDeviceReady() {
+        //hide splash screen now that our app is ready to run
+       intel.xdk.device.hideSplashScreen();
+        setTimeout(function () {
+            $.ui.launch();
+        }, 50);
+		
+		//lock in "portrait" orientation 
+		intel.xdk.device.setRotateOrientation("portrait");
+    }
+    //initial event handler to detect when intel is ready to roll
+    document.addEventListener("intel.xdk.device.ready", onDeviceReady, false);
+	
+	//global stuff
+	var db = createTables();
+	var query;
+	var onItemID = null; 
+	var onAisle = null;
+
+	$(document).ready(function(e) {
+		/*
+		Find out what is clicked
+		$("body").click(function(event) {
+			alert(event.target.id+" and "+event.target.className);	
+		});*/
+		
+		$("#searchResults-ul").on("click", "a", function (e) {
+    		e.preventDefault();
+    		onItemID = $(this).closest("li").attr("id");
+		});
+		
+		$("#searchFieldDiv").on("input", function() {
+			if(this.value != "")
+				searchItems(this.value);	
+		});
+		
+    });
+	
+	//start webSQL
+	function getOpenDb() { 
+		try {
+			if (window.openDatabase) {                    
+				return window.openDatabase;                  
+			} else {
+				alert('No HTML5 support');
+				return undefined;
+			}
+		}
+		catch (e) {
+			alert(e);
+			return undefined;
+		}            
+	}
+	
+	function createTables() {
+		var openDB = getOpenDb();
+		
+		if(!openDB)
+		{                
+			return; 
+			alert("Error: failed to create database.");              
+		}
+		else
+		{
+			db = openDB("superstore_dbc","1.0","Superstore Client Database", 2*1024*1024);
+			
+			db.transaction(function (t) {
+				$.ajax({
+						type:"GET",
+						async: false,
+						url:"data/websql-queries.txt",
+						success:function(data){
+								query = data.split("\n"); //read the sql queries from text file line by line
+								
+								for(var i=0; i < query.length; i++)
+									t.executeSql(query[i], [], null, databaseError);     
+							}
+					});
+				});
+				
+			readForJsonExport(); //export database to JSON
+			return db;
+    	}            
+	}
+	
+	
+	function databaseError(err) {
+		alert("Error: "+err);
+	}
+	
+	function readForJsonExport() {
+		var dataJSON = [];
+		db.transaction(function(t) {
+			t.executeSql('SELECT * from items', [], function(t, data) {
+				for (var i=0; i < data.rows.length; i++)
+					dataJSON[i] = data.rows.item(i);
+					
+				var evaldata = JSON.stringify(dataJSON);
+				console.log("currently: "+evaldata);
+				
+				//get server-side db categories
+				$.ajax({
+						type:"GET",
+						async: false,
+						url:"http://www.anneuy.com/superstoreapp2014/category.json",
+						success:function(newData){
+							console.log("going in categories...");
+							//newData = newData.replace(/\\/g, '');
+							console.log("unparsed data "+newData);
+							newData = $.parseJSON(newData);
+							console.log("parsed data "+newData);
+							updateCategoriesDB(newData); //update items
+						},
+						error: function(xhr, status, error) {
+						  console.log(arguments);
+						  console.log(error);
+						},
+					});
+					
+				//get server-side db products
+				$.ajax({
+						type:"GET",
+						async: false,
+						url:"http://anneuy.com/superstoreapp2014/product.json",
+						success:function(newData){
+							console.log("going in products...");
+							//newData = newData.replace(/\\/g, '');
+							//console.log(newData);
+							newData = $.parseJSON(newData);
+							console.log(newData);
+							updateProductsDB(newData); //update products
+						},
+						error: function(xhr, status, error) {
+						  console.log(arguments);
+						  console.log(error);
+						},
+					});
+					
+				//get server-side db items
+				$.ajax({
+						type:"GET",
+						async: false,
+						url:"http://anneuy.com/superstoreapp2014/item.json",
+						success:function(newData){
+							newData = newData.replace(/\\/g, '');
+							console.log(newData);
+							newData = $.parseJSON(newData);
+							console.log(newData);
+							updateItemsDB(newData); //update items
+						},
+						error: function(xhr, status, error) {
+						  //var err = eval("(" + xhr.responseText + ")");
+						  console.log(arguments);
+						  console.log(error);
+						},
+					});
+		
+			}, databaseError);	
+			
+		}, databaseError);
+	}
+	
+	function updateCategoriesDB(newData) {
+		
+		console.log(newData[0].cat_name);
+		console.log(newData.length);
+		
+		var dropCategories = "DROP TABLE category";
+		var createCategoryTable = "CREATE TABLE IF NOT EXISTS category(cat_ID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, cat_name VARCHAR(60));";	
+		
+		db.transaction(function (t) {
+			t.executeSql(dropCategories, null, updateCategoryTable, null);
+			
+			function updateCategoryTable() {
+				t.executeSql(createCategoryTable, null, function (t, data) {
+					for(var i=0; i < newData.length; i++)
+					{
+						console.log("came in updateCategories "+newData[i].cat_name);
+						var catID = newData[i].cat_ID;
+						var catName = newData[i].cat_name;
+						
+						t.executeSql("INSERT INTO category VALUES (null, '"+catName+"')", null, null, function(t, err) { alert(err); });
+					}
+				}, null);	
+			}
+			
+		});
+	}
+	
+		function updateProductsDB(newData) {
+		
+		console.log(newData[0].prod_name);
+		console.log(newData.length);
+		
+		var dropProducts = "DROP TABLE product";
+		var createProductTable = "CREATE TABLE IF NOT EXISTS product(prod_ID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, prod_name VARCHAR(60) NOT NULL, aisle_ID VARCHAR(10), shelf_ID VARCHAR(2), cat_ID INTEGER, FOREIGN KEY(cat_ID) REFERENCES category(cat_ID));";	
+		
+		db.transaction(function (t) {
+			t.executeSql(dropProducts, null, updateProductTable, null);
+			
+			function updateProductTable() {
+				t.executeSql(createProductTable, null, function (t, data) {
+					for(var i=0; i < newData.length; i++)
+					{
+						console.log("came in updateProducts "+newData[i].prod_name);
+						var prodID = newData[i].prod_ID;
+						var prodName = newData[i].prod_name;
+						var aisle = newData[i].aisle_ID;
+						var shelf = newData[i].shelf_ID;
+						var catID = newData[i].cat_ID;
+						
+						t.executeSql("INSERT INTO product VALUES (null, '"+prodName+"', '"+aisle+"', '"+shelf+"', '"+catID+"')", null, null, function(t, err) { console.log(err); });
+					}
+				}, null);	
+			}
+			
+		});
+	}
+	
+	function updateItemsDB(newData) {
+		
+		console.log(newData[0].item_name);
+		console.log(newData.length);
+		
+		var dropItems = "DROP TABLE items";
+		var createItemTable = "CREATE TABLE IF NOT EXISTS items(item_ID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, item_name VARCHAR(40) NOT NULL, brand VARCHAR(30), manufacturer VARCHAR(40), quantity INTEGER, price DECIMAL(19, 4) NOT NULL, pic_url VARCHAR(50), prod_ID INTEGER, FOREIGN KEY(prod_ID) REFERENCES product(prod_ID));";	
+		
+		db.transaction(function (t) {
+			t.executeSql(dropItems, null, updateItemTable, null);
+			
+			function updateItemTable() {
+				t.executeSql(createItemTable, null, function (t, data) {
+					for(var i=0; i < newData.length; i++)
+					{
+						console.log("came in updatenewitems ");
+						var itemName = newData[i].item_name;
+						itemName = itemName.replace("'","''"); //escape ' or other special characters
+						console.log("item name is "+newData[i].item_name);
+						var itemPrice = newData[i].price;
+						console.log("price is "+itemPrice);
+						var brand = newData[i].brand;
+						brand = brand.replace("'","''");
+						console.log("brand is "+brand);
+						var manufacturer = newData[i].manufacturer;
+						manufacturer =  manufacturer.replace("'","''");
+						console.log("manufacturer is "+manufacturer);
+						var quantity = newData[i].quantity;
+						console.log("qty is "+quantity);
+						var itemPic = newData[i].pic_url;
+						console.log("item pic is "+itemPic);
+						var prod_id = newData[i].prod_ID;
+						console.log("prod ID is "+prod_id);
+						
+						t.executeSql("INSERT INTO items VALUES (null, '"+itemName+"', '"+brand+"', '"+manufacturer+"', '"+quantity+"', '"+itemPrice+"', '"+itemPic+"', '"+prod_id+"')", null, null, function(t, err) { console.log("Update New Items Error: "+err.message); });
+					}
+				}, null);	
+			}
+			
+		});
+		selRows(); //populate list with all items
+	}
+	
+	function selRows() {
+    var q = "SELECT * FROM items, product WHERE items.prod_ID = product.prod_ID";
+    
+    db.readTransaction(function (t) {
+        t.executeSql(q, null, function (t, data) {
+    		var html = "";
+            for (var i = 0; i < data.rows.length; i++) {
+				if (data.rows.item(i).shelf_ID != "")
+					var	shelf = "SHELF "+data.rows.item(i).shelf_ID;
+				else shelf = "";
+                 html += "<li class='resultsItem upper' id='"+data.rows.item(i).item_ID+"'><a href='#item-page' class='itemLink'><img src='"+ data.rows.item(i).pic_url + "' class='item_thumb' /><div class='itemPrice'>$"+data.rows.item(i).price.toFixed(2) +"</div><div class='itemBrand'>" +data.rows.item(i).brand + "</div><div class='nameItem'>" +data.rows.item(i).item_name + "</div><div class='locationDiv'><img src='images/location_icon.svg' class='location_svg' />Aisle "+data.rows.item(i).aisle_ID+" "+shelf+"</div></a></li>";
+			}
+            var searchResultsList= document.getElementById("searchResults-ul");
+            searchResultsList.innerHTML = html;
+        });
+    });
+	}
+	
+	function selItem()
+	{
+		if (onItemID != null)
+		{
+			var q = "SELECT item_ID, pic_url, item_name, aisle_ID, shelf_ID, brand, price, quantity, cat_name FROM items, product, category WHERE items.item_ID=? AND items.prod_ID = product.prod_ID AND product.cat_ID = category.cat_ID";
+			db.transaction(function(t) {
+				t.executeSql(q, [onItemID], function(t, data) {
+					var imageUrl, aisle, shelf, itemName, brandName, price, qty, category;
+					
+					//get all variables
+					imageUrl = data.rows.item(0).pic_url;
+					itemName = data.rows.item(0).item_name;
+					aisle = data.rows.item(0).aisle_ID;
+					onAisle = aisle.toString().toLowerCase();
+					if (data.rows.item(0).shelf_ID != "")
+						shelf = "SHELF "+data.rows.item(0).shelf_ID;
+					else shelf = "";
+					brandName = data.rows.item(0).brand;
+					price = data.rows.item(0).price.toFixed(2);
+					qty = data.rows.item(0).quantity;
+					category = data.rows.item(0).cat_name;
+					
+					//format html
+					var formatHtml= "<img src='"+imageUrl+"' class='bigItemPic'><div class='bigItemBrand textCenter upper'>"+brandName+"</div><div class='bigItemName textCenter upper'>"+itemName+"</div><a href='#dedicated-map'><div class='bigLocationDiv'><img src='images/location_ico_bigger.svg' class='bigLocation'>AISLE "+aisle+" "+shelf+"</div></a><div class='itemDetails'><img src='images/money_icon.svg'>$"+price+"<br><img src='images/weigh_icon.svg'>"+qty+"<br><img src='images/description_icon.svg'>"+category+"</div>";
+					
+					$(".itemWrapper").html(formatHtml);
+				}, function (error) { //on error 
+					$(".itemWrapper").html("<br><h2>Sorry for the inconvenience</h2><p>There was an error that occured. Please contact support.</p><br><p> Error: "+error+"</p>");
+					});	
+			});
+		}
+	}
+	
+	function getMapLoc() {
+		var map, display;
+		switch (onAisle)
+		{
+			case '1': map = "MAP_1.png"; break;
+			case '2': map = "MAP_2.png"; break;
+			case '3': map = "MAP_3.png"; break;
+			case '4': map = "MAP_4.png"; break;
+			case '5': map = "MAP_5.png"; break;
+			case '6': map = "MAP_6.png"; break;
+			case '7': map = "MAP_7.png"; break;
+			case '8': map = "MAP_8.png"; break;
+			case '9': map = "MAP_9.png"; break;
+			case 'baby': map = "MAP_baby.png"; break;
+			case 'bakery': map = "MAP_bakery.png"; break;
+			case 'checkout': map = "MAP_checkout.png"; break;
+			case 'cosmetics': map = "MAP_cosmetics.png"; break;
+			case 'deli': map = "MAP_deli.png"; break;
+			case 'dairy': map = "MAP_dairy.png"; break;
+			case 'electronics': map = "MAP_electronics.png"; break;
+			case 'floral': map = "MAP_floral.png"; break;
+			case 'frozen': map = "MAP_frozen.png"; break;
+			case 'joe': map = "MAP_joe.png"; break;
+			case 'meat': map = "MAP_meat.png"; break;
+			case 'natural': map = "MAP_natural.png"; break;
+			case 'optical': map = "MAP_optical.png"; break;
+			case 'pharmacy': map = "MAP_pharmacy.png"; break;
+			case 'produce': map = "MAP_produce.png"; break;
+			case 'seafood': map = "MAP_seafood.png"; break;
+			case 'toys': map = "MAP_toys.png"; break;
+			default: map= "error"; break;
+		}
+		
+		//error check
+		if (map == "error")
+		{
+			display = "<div class='errorMap'><h2>Sorry for the inconvenience</h2><p>There was an error that occured. Please contact support at superstoreapp@bulldogdev.com and we'll get to fixing this problem right away!</p></div>";
+		} else //show map
+		{
+			display = "<img src='maps/"+map+"' class='dedicatedMap'>";
+		}
+		//attach to window
+		$("#grayedOutPanel").html(display);
+	}
+	
+	function searchItems(keyword) {
+		keyword = keyword.toLowerCase();
+		console.log(keyword);
+		
+		if (keyword != "")
+		{
+			var item_ID, imageUrl, prod_ID, itemName, brandName, price;
+			var find_query = "SELECT DISTINCT item_ID, item_name, brand, manufacturer, price, prod_ID, pic_url FROM items WHERE item_name LIKE '%"+keyword+"%' OR brand LIKE '%"+keyword+"%'";
+				db.transaction(function(t) {
+					t.executeSql(find_query, null, function(t, data) {
+						$("#searchResults-ul").html("");
+						for (var i = 0; i < data.rows.length; i++) {
+							prod_ID = data.rows.item(i).prod_ID; 
+							imageUrl = data.rows.item(i).pic_url;
+							itemName = data.rows.item(i).item_name;	
+							price = data.rows.item(i).price;	
+							item_ID = data.rows.item(i).item_ID;	
+							brandName = data.rows.item(i).brand;
+								
+							//get shelf and aisle info	
+							getShelfandAisle(prod_ID, item_ID, imageUrl, itemName, price, brandName);
+						} // end of for loop
+					
+				}, function (error) { //on error 
+					$("#searchResults-ul").html("<br><h2>Sorry for the inconvenience</h2><p>There was an error that occured. Please contact support at superstoreapp@bulldogdev.com.</p><br><p> Error: "+error+"</p>");
+					});	// end of data 1
+			}); // end of data 1
+		} //end of if check on keyword
+	}
+	
+	function getShelfandAisle(prod_ID, item_ID, imageUrl, itemName, price, brandName) {
+		var html = "";
+		db.transaction(function(st) { 
+			console.log("item name "+itemName);
+			var getShelfandAisleQ = "SELECT shelf_ID, aisle_ID FROM product WHERE prod_ID = ?";
+			st.executeSql(getShelfandAisleQ, [prod_ID], function(st, data2) {
+				if (data2.rows.item(0).shelf_ID != "")
+					var	shelf = "SHELF "+data2.rows.item(0).shelf_ID;
+				else shelf = "";
+				var aisle = data2.rows.item(0).aisle_ID;
+									
+				 html += "<li class='resultsItem upper' id='"+item_ID+"'><a href='#item-page' class='itemLink'><img src='"+ imageUrl+ "' class='item_thumb' /><div class='itemPrice'>$"+price.toFixed(2) +"</div><div class='itemBrand'>" +brandName + "</div><div class='nameItem'>" +itemName+ "</div><div class='locationDiv'><img src='images/location_icon.svg' class='location_svg' />Aisle "+aisle+" "+shelf+"</div></a></li>";
+				$("#searchResults-ul").append(html);
+			}); //end of executesql data2
+		});// end of db transaction 2	
+	}
+</script>
+<script>
+    if(isIntel)
+        $.ui.autoLaunch = false;
+    $.ui.useOSThemes = true; //Change this to false to force a device theme
+    $.ui.blockPageScroll();
+    $(document).ready(function () {
+        if ($.ui.useOSThemes && (!$.os.ios||$.os.ios7))
+            $("#afui").removeClass("ios");
+    });
+</script>
+<link href="css/icons.css" rel="stylesheet" type="text/css">
+<link href="css/af.ui.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+<div id="afui" class="ios">
+    <div id="header" class="header"></div>
+    <div id="content" style="">
+        <div class="panel" title="Search" selected="selected" data-nav="nav_0" id="search-results"
+        data-appbuilder-object="page" style="" data-header="header_no_backbutton"
+        data-footer="footer">
+            <div id="searchBarDiv">
+                <input type="search" id="searchFieldDiv" class="searchField" name="searchFieldDiv"
+                placeholder="Where can I find...?" autofocus>
+                <!--<a class="button icon magnifier" href="#search-results" data-appbuilder-object="button"
+                data-transition="slide" id="search-button" style="border:none;color:#fff;"></a>-->
+            </div>
+            <ul class="list" id="searchResults-ul" data-appbuilder-object="list"></ul>
+            <!-- /search list UL -->
+        </div>
+        <div class="panel" title="Add-Item" data-nav="sideMenu" id="add-item" data-appbuilder-object="page"
+        style="">
+            <label>Item Name:</label>
+            <input type="text" id="itemName">
+            <br>
+            <label>Brand:</label>
+            <input type="text" id="brand">
+            <br>
+            <label>Manufacturer:</label>
+            <input type="text" id="manufacturer">
+            <br>
+            <label>Quantity:</label>
+            <input type="text" id="quantity">
+            <br>
+            <label>Price:</label>
+            <input type="text" id="itemPrice">
+            <br>
+            <label>Picture:</label>
+            <input type="text" id="itemPicURL">
+            <button id="addItem" data-appbuilder-object="button" class="">Add Item</button>
+        </div>
+        <!-- /add item-->
+        <div class="panel" title="Item Page" data-nav="sideMenu" data-load="selItem" id="item-page"
+        data-appbuilder-object="page" style="" data-header="header_backbutton"
+        data-footer="none">
+            <div class="itemWrapper"></div>
+        </div>
+        <!-- /item page -->
+        <div class="panel" title="Map" data-nav="sideMenu" id="map" data-appbuilder-object="page"
+        style="" data-header="default" data-footer="none" data-modal="true">
+            <img src="images/map-all.svg" class="map">
+        </div>
+        <!-- /common map -->
+        <div class="panel" title="Map" data-nav="sideMenu" id="dedicated-map" data-appbuilder-object="page"
+        style="" data-header="default" data-footer="none" data-modal="true" data-load="getMapLoc">
+            <div id="grayedOutPanel">
+                <img src="maps/MAP_frozenfoods.png" class="dedicatedMap">
+            </div>
+        </div>
+        <!-- /dedicated map-->
+    </div>
+    <!-- /content -->
+
+    <div id="navbar" class="footer">
+        <footer></footer>
+    </div>
+
+    <nav id="sideMenu" data-appbuilder-object="nav">
+        <h1>Side Menu</h1>
+    </nav>
+    <footer id="footer" data-appbuilder-object="footer"><a href="#map" class="icon location">Map</a>
+    </footer>
+    <header id="header_backbutton" data-appbuilder-object="header"><a id="backButton" class="button backButton">Back</a>
+        <h1 class="">Item Details</h1>
+    </header>
+    <header id="header_no_backbutton" data-appbuilder-object="header">
+        <h1 class="">Search</h1>
+    </header>
+
+</div>
+</body>
+</html>

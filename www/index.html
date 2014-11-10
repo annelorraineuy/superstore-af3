@@ -116,13 +116,13 @@
 				$.ajax({
 						type:"GET",
 						async: false,
-						url:"http://anneuy.com/superstoreapp2014/category.json",
+						url:"http://www.anneuy.com/superstoreapp2014/category.json",
 						success:function(newData){
 							console.log("going in categories...");
-							newData = newData.replace(/\\/g, '');
-							console.log(newData);
+							//newData = newData.replace(/\\/g, '');
+							console.log("unparsed data "+newData);
 							newData = $.parseJSON(newData);
-							console.log(newData);
+							console.log("parsed data "+newData);
 							updateCategoriesDB(newData); //update items
 						},
 						error: function(xhr, status, error) {
@@ -138,8 +138,8 @@
 						url:"http://anneuy.com/superstoreapp2014/product.json",
 						success:function(newData){
 							console.log("going in products...");
-							newData = newData.replace(/\\/g, '');
-							console.log(newData);
+							//newData = newData.replace(/\\/g, '');
+							//console.log(newData);
 							newData = $.parseJSON(newData);
 							console.log(newData);
 							updateProductsDB(newData); //update products
@@ -246,17 +246,26 @@
 				t.executeSql(createItemTable, null, function (t, data) {
 					for(var i=0; i < newData.length; i++)
 					{
-						console.log("came in updatenewitems "+newData[i].item_name);
+						console.log("came in updatenewitems ");
 						var itemName = newData[i].item_name;
+						itemName = itemName.replace("'","''"); //escape ' or other special characters
+						console.log("item name is "+newData[i].item_name);
 						var itemPrice = newData[i].price;
+						console.log("price is "+itemPrice);
 						var brand = newData[i].brand;
+						brand = brand.replace("'","''");
+						console.log("brand is "+brand);
 						var manufacturer = newData[i].manufacturer;
+						manufacturer =  manufacturer.replace("'","''");
+						console.log("manufacturer is "+manufacturer);
 						var quantity = newData[i].quantity;
-						var itemPic = newData[i].pic_url.replace(/\\/g, '');
+						console.log("qty is "+quantity);
+						var itemPic = newData[i].pic_url;
 						console.log("item pic is "+itemPic);
 						var prod_id = newData[i].prod_ID;
+						console.log("prod ID is "+prod_id);
 						
-						t.executeSql("INSERT INTO items VALUES (null, '"+itemName+"', '"+brand+"', '"+manufacturer+"', '"+quantity+"', '"+itemPrice+"', '"+itemPic+"', '"+prod_id+"')", null, null, function(t, err) { alert(err); });
+						t.executeSql("INSERT INTO items VALUES (null, '"+itemName+"', '"+brand+"', '"+manufacturer+"', '"+quantity+"', '"+itemPrice+"', '"+itemPic+"', '"+prod_id+"')", null, null, function(t, err) { console.log("Update New Items Error: "+err.message); });
 					}
 				}, null);	
 			}
@@ -498,6 +507,4 @@
 
 </div>
 </body>
-
-
 </html>
