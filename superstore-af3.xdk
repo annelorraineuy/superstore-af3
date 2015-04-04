@@ -8,7 +8,7 @@
       "src": "appStarter",
       "sourceDirectory": "www",
       "projectGuid": "968e509d-d482-4e70-a315-5b4a23fb2c1e",
-      "lastModifiedDate": 1415301446118,
+      "lastModifiedDate": 1417031767245,
       "creationDate": 1412025000426
     },
     "XDK-app-starter": "true",
@@ -35,42 +35,7 @@
     ],
     "cordovaPlugins": [
       {
-        "id": "org.apache.cordova.device-motion",
-        "version": "0.2.4",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
-        "id": "org.apache.cordova.camera",
-        "version": "0.2.9",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
-        "id": "org.apache.cordova.media-capture",
-        "version": "0.2.8",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
-        "id": "org.apache.cordova.device-orientation",
-        "version": "0.3.6",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
         "id": "org.apache.cordova.network-information",
-        "version": "0.2.8",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
-        "id": "org.apache.cordova.contacts",
         "version": "0.2.8",
         "selectedState": "Auto",
         "data": {},
@@ -91,55 +56,6 @@
         "paramvals": {}
       },
       {
-        "id": "org.apache.cordova.file",
-        "version": "0.2.5",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
-        "id": "org.apache.cordova.geolocation",
-        "version": "0.3.5",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
-        "id": "org.apache.cordova.globalization",
-        "version": "0.2.7",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
-        "id": "org.apache.cordova.inappbrowser",
-        "version": "0.3.0",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
-        "id": "org.apache.cordova.media",
-        "version": "0.2.8",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
-        "id": "org.apache.cordova.dialogs",
-        "version": "0.2.5",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
-        "id": "org.apache.cordova.vibration",
-        "version": "0.3.5",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
         "id": "org.apache.cordova.splashscreen",
         "version": "0.2.5",
         "selectedState": "Auto",
@@ -147,79 +63,7 @@
         "paramvals": {}
       },
       {
-        "id": "intel.xdk.accelerometer",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
-        "id": "intel.xdk.audio",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
         "id": "intel.xdk.base",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
-        "id": "intel.xdk.cache",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
-        "id": "intel.xdk.camera",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
-        "id": "intel.xdk.contacts",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
-        "id": "intel.xdk.device",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
-        "id": "intel.xdk.display",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
-        "id": "intel.xdk.facebook",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
-        "id": "intel.xdk.file",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
-        "id": "intel.xdk.geolocation",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
-        "id": "intel.xdk.notification",
-        "selectedState": "Auto",
-        "data": {},
-        "paramvals": {}
-      },
-      {
-        "id": "intel.xdk.player",
         "selectedState": "Auto",
         "data": {},
         "paramvals": {}
@@ -297,7 +141,7 @@
         "appVersion_": "1.0.0",
         "runtime_": "Cordova 3.x",
         "appDescription_": "Superstore Grocery Item Finder",
-        "appAuthor_": "Anne Uy, Christina Chan & Jeff Fung",
+        "appAuthor_": "Anne Uy, Christina Chan and Jeff Fung",
         "appVersionCode_": "1"
       },
       "Android-Crosswalk": {
@@ -321,20 +165,72 @@
       "iOS": {
         "platform_": "ios",
         "name_": "iOS",
-        "preferences_": {},
+        "preferences_": {
+          "Orientation": "portrait",
+          "Fullscreen": true
+        },
         "isActive_": true,
-        "appName_": "superstore-af3",
+        "appName_": "superstore-1",
         "appID_": "not.yet.specified",
         "appAccess_": "*",
-        "icons_": [],
-        "splashes_": [],
+        "icons_": [
+          {
+            "relPath": "kitchensink/iOS-icon-120.png",
+            "height": 120,
+            "width": 120
+          },
+          {
+            "relPath": "kitchensink/iOS-icon-60.png",
+            "height": 60,
+            "width": 60
+          },
+          {
+            "relPath": "kitchensink/iOS-icon-152.png",
+            "height": 152,
+            "width": 152
+          },
+          {
+            "relPath": "kitchensink/iOS-icon-76.png",
+            "height": 76,
+            "width": 76
+          }
+        ],
+        "splashes_": [
+          {
+            "relPath": "kitchensink/iOS-splash-640x1136.png.png",
+            "height": 1136,
+            "width": 640
+          },
+          {
+            "relPath": "kitchensink/iOS-splash-640x960.png",
+            "height": 960,
+            "width": 640
+          },
+          {
+            "relPath": "kitchensink/iOS-splash-320x480.png",
+            "height": 480,
+            "width": 320
+          },
+          {
+            "relPath": "kitchensink/iOS-splash-1536x2008.png",
+            "height": 2008,
+            "width": 1536
+          },
+          {
+            "relPath": "kitchensink/iOS-splash-768x1004.png.png",
+            "height": 1004,
+            "width": 768
+          }
+        ],
         "iosProvs_": [],
         "addlPermissions_": "",
         "excludedLibraries_": "",
         "cordovaCLIVersion_": "3.3",
         "crosswalkVersion_": "stable",
         "appVersion_": "1.0.0",
-        "runtime_": "Cordova 3.x"
+        "runtime_": "Cordova 3.x",
+        "appDescription_": "Superstore Grocery Item Finder",
+        "appAuthor_": "Anne Uy, Christina Chan and Jeff Fung"
       },
       "Windows8": {
         "platform_": "windows8",

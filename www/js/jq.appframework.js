@@ -4,13 +4,11 @@
  * @author Ian Maffett
  * @description A plugin to allow jQuery developers to use App Framework UI
  */
+/* global jquery*/
 /* jshint eqeqeq:false */
 (function($,window){
     "use strict";
-    jQuery.event.props.push("touches");
-    jQuery.event.props.push("originalTouches");
-    jQuery.event.props.push("changedTouches");
-    var nundefined, document = window.document,classCache = {},isWin8=(typeof(MSApp)==="object"),_jsonPID = 1;
+    var nundefined, document = window.document,classCache = {},isWin8=(typeof(MSApp)==="object"),jsonPHandlers = [],_jsonPID = 1;
 
     function classRE(name) {
         return name in classCache ? classCache[name] : (classCache[name] = new RegExp("(^|\\s)" + name + "(\\s|$)"));
@@ -89,7 +87,7 @@
         $.os.androidICS = $.os.android && userAgent.match(/(Android)\s4/) ? true : false;
         $.os.ipad = userAgent.match(/(iPad).*OS\s([\d_]+)/) ? true : false;
         $.os.iphone = !$.os.ipad && userAgent.match(/(iPhone\sOS)\s([\d_]+)/) ? true : false;
-        $.os.ios7 = ($.os.ipad||$.os.iphone)&&userAgent.match(/7_/)||($.os.ipad||$.os.iphone)&&userAgent.match(/8_/) ? true : false;
+        $.os.ios7 = ($.os.ipad||$.os.iphone)&&userAgent.match(/7_/) ? true : false;
         $.os.webos = userAgent.match(/(webOS|hpwOS)[\s\/]([\d.]+)/) ? true : false;
         $.os.touchpad = $.os.webos && userAgent.match(/TouchPad/) ? true : false;
         $.os.ios = $.os.ipad || $.os.iphone;
@@ -306,10 +304,6 @@
      */
     $.unbind = function (obj, ev, f) {
         if (!obj.__events) return;
-        if(ev==nundefined) {
-            delete obj.__events;
-            return;
-        }
         if (!$.isArray(ev)) ev = [ev];
         for (var i = 0; i < ev.length; i++) {
             if (obj.__events[ev[i]]) {
@@ -381,6 +375,7 @@
     $.is$ = function (obj) {
         return obj instanceof $;
     };
+    var empty=function(){};
     $.jsonP = function(options) {
         if (isWin8) {
             options.type = "get";
@@ -391,6 +386,11 @@
         var abortTimeout = "",
             context, callback;
         var script = document.createElement("script");
+        var abort = function() {
+            $(script).remove();
+            if (window[callbackName])
+                window[callbackName] = empty;
+        };
         window[callbackName] = function(data) {
             clearTimeout(abortTimeout);
             $(script).remove();
@@ -424,6 +424,24 @@
     };
 
     //Shim to put touch events on the jQuery special event
+    var oldAdd=$.event.add;
+
+    $.event.add=function(){
+        var oldHandler=arguments[2];
+        var self=this;
+        var handler=function(){
+            var oldArgs=arguments;
+            if(oldArgs[0].originalEvent&&oldArgs[0].originalEvent.touches){
+                oldArgs[0].touches=oldArgs[0].originalEvent.touches;
+                oldArgs[0].changedTouches=oldArgs[0].originalEvent.changedTouches;
+                oldArgs[0].targetTouches=oldArgs[0].originalEvent.targetTouches;
+            }
+            oldHandler.apply(self,oldArgs);
+        };
+        arguments[2]=handler;
+        oldAdd.apply($, arguments);
+    };
+
 
     window.$afm=$;
 

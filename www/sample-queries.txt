@@ -1,8 +1,0 @@
-INSERT INTO ITEMS values (null, 'Plain greek yogurt', 'Danone', 'Danone', '50g', '5.50', 'http://larrythedood.files.wordpress.com/2011/06/dannon-greek-yogurt.jpg', '1')
-
-update items SET prod_ID=47 WHERE item_ID=2
-
-INSERT INTO PRODUCT values (7, 'Fruits', 'PRODUCE', '', '7')
-
-problem in search query : 
-SELECT DISTINCT item_name, brand, price, shelf_ID, aisle_ID FROM items, product, category WHERE items.prod_ID=product.prod_ID AND product.cat_ID = category.cat_ID AND item_name LIKE "%ban%" OR brand LIKE "%ban%" OR manufacturer LIKE "%ban%" OR prod_name LIKE "%ban%" OR cat_name LIKE "%ban%" ORDER BY item_name
